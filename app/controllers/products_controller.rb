@@ -25,7 +25,9 @@ class ProductsController < ApplicationController
       Rails.logger.info "Created product with ID: #{@product.id}"
       redirect_to @product, notice: "Product was successfully created."
     else
-      Rails.logger.warn "Failed to create product: #{@product.errors.full_messages.join(', ')}"
+      message = "Failed to create product: #{@product.errors.full_messages.join(', ')}"
+      Rails.logger.warn message
+      Sentry.capture_message(message, level: :warning)
       render :new, status: :unprocessable_entity 
     end
   end
@@ -35,7 +37,9 @@ class ProductsController < ApplicationController
       Rails.logger.info "Updated product with ID: #{@product.id}"
       redirect_to @product, notice: "Product was successfully updated."
     else
-      Rails.logger.warn "Failed to update product ID #{@product.id}: #{@product.errors.full_messages.join(', ')}"
+      message = "Failed to update product ID #{@product.id}: #{@product.errors.full_messages.join(', ')}"
+      Rails.logger.warn message
+      Sentry.capture_message(message, level: :warning)
       render :edit, status: :unprocessable_entity 
     end
   end
@@ -53,6 +57,7 @@ class ProductsController < ApplicationController
     Rails.logger.debug "Set @product with ID: #{@product.id}"
   rescue ActiveRecord::RecordNotFound => e
     Rails.logger.error "Product not found with ID: #{params[:id]} - #{e.message}"
+    Sentry.capture_exception(e) 
     redirect_to products_path, alert: "Product not found."
   end
 
